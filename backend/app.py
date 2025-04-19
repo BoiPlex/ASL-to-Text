@@ -71,15 +71,12 @@ def main():
     point_history_classifier = PointHistoryClassifier()
 
     # Read labels ###########################################################
-    with open('model/keypoint_classifier/keypoint_classifier_label.csv',
-              encoding='utf-8-sig') as f:
+    with open('model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
         keypoint_classifier_labels = csv.reader(f)
         keypoint_classifier_labels = [
             row[0] for row in keypoint_classifier_labels
         ]
-    with open(
-            'model/point_history_classifier/point_history_classifier_label.csv',
-            encoding='utf-8-sig') as f:
+    with open('model/point_history_classifier/point_history_classifier_label.csv', encoding='utf-8-sig') as f:
         point_history_classifier_labels = csv.reader(f)
         point_history_classifier_labels = [
             row[0] for row in point_history_classifier_labels
@@ -182,14 +179,16 @@ def main():
 
 
 def select_mode(key, mode):
+    OFFSET = 0 # Current label offset to collect more than just 10 labels
+    # Increment offset by 10
     number = -1
-    if 48 <= key <= 57:  # 0 ~ 9
-        number = key - 48
-    if key == 110:  # n
+    if 48 <= key <= 57:  # 0 ~ 9: select label
+        number = key - 48 + OFFSET 
+    if key == 110:  # n: normal mode
         mode = 0
-    if key == 107:  # k
+    if key == 107:  # k: key point recognition mode (hand signs)
         mode = 1
-    if key == 104:  # h
+    if key == 104:  # h: point history recognition mode (hand gestures)
         mode = 2
     return number, mode
 
