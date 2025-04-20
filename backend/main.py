@@ -1,9 +1,10 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from collections import deque
 import numpy as np
 import cv2
 import io
+import base64
 
 from app import process_image, HISTORY_LENGTH
 
@@ -24,9 +25,20 @@ async def classify_image(file: UploadFile = File(...)):
     nparr = np.frombuffer(contents, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+    if image is None:
+        raise HTTPException(status_code=400, detail="Invalid image")
+
     # Process image to get debug output
-    debug_image, hand_sign_label, finger_gesture_label  = process_image(image, point_history, finger_gesture_history)
+    debug_image, hand_sign_label, finger_gesture_label, handedness  = process_image(image, point_history, finger_gesture_history)
 
     # Encode the debug image to JPEG for streaming response
     _, buffer = cv2.imencode(".jpg", cv2.cvtColor(debug_image, cv2.COLOR_RGB2BGR))
-    return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
+    image_base64 = base64.b64encode(buffer).decode("utf-8")
+    # return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
+
+    return JSONResponse(content={
+        "image": image_base64,
+        "hand_sign_label": hand_sign_label or "None",
+        "finger_gesture_label": finger_gesture_label or "None",
+        "handedness": handedness or "None"
+    })
