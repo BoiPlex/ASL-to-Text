@@ -182,12 +182,14 @@ def main():
         # Process Key (ESC: end) #################################################
         key = cv.waitKey(10)
         if key == 27:  # ESC
+            print("ESC PRESSED")
             break
         number, mode = select_mode(key, mode)
 
         # Camera capture #####################################################
         ret, image = cap.read()
         if not ret:
+            print("NO RET")
             break
         image = cv.flip(image, 1)  # Mirror display
 
