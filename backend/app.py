@@ -16,6 +16,12 @@ from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
+DESKTOP_MODE = True
+DESKTOP_DIMENSIONS =  (960, 540)
+MOBILE_DIMENSIONS =  (720, 1080)
+
+HISTORY_LENGTH = 16
+
 OFFSET = 0 # Current label offset to collect more than just 10 labels
 # Increment offset by 10
 
@@ -42,7 +48,12 @@ hands_detector = mp_hands.Hands(
 keypoint_classifier = KeyPointClassifier()
 point_history_classifier = PointHistoryClassifier()
 
-def process_image(image, results, point_history, finger_gesture_history, training_mode=False, debug_mode=True):
+def process_image(image, point_history, finger_gesture_history, training_mode=False, debug_mode=True, number=None, mode=None):
+    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    image.flags.writeable = False
+    results = hands_detector.process(image)
+    image.flags.writeable = True
+
     debug_image = copy.deepcopy(image)
     if results.multi_hand_landmarks is not None:
         for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
@@ -73,7 +84,7 @@ def process_image(image, results, point_history, finger_gesture_history, trainin
             # Finger gesture classification
             finger_gesture_id = 0
             point_history_len = len(pre_processed_point_history_list)
-            if point_history_len == (history_length * 2):
+            if point_history_len == (HISTORY_LENGTH * 2):
                 finger_gesture_id = point_history_classifier(
                     pre_processed_point_history_list)
 
@@ -95,17 +106,22 @@ def process_image(image, results, point_history, finger_gesture_history, trainin
                 )
     else:
         point_history.append([0, 0])
-
-    debug_image = draw_point_history(debug_image, point_history)
     
+    debug_image = draw_point_history(debug_image, point_history)
+    return debug_image
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
+    if DESKTOP_MODE:
+        width, height = DESKTOP_DIMENSIONS
+    else:
+        width, height = MOBILE_DIMENSIONS
+
     parser.add_argument("--device", type=int, default=0)
-    parser.add_argument("--width", help='cap width', type=int, default=960)
-    parser.add_argument("--height", help='cap height', type=int, default=540)
+    parser.add_argument("--width", help='cap width', type=int, default=width)
+    parser.add_argument("--height", help='cap height', type=int, default=height)
 
     parser.add_argument('--use_static_image_mode', action='store_true')
     parser.add_argument("--min_detection_confidence",
@@ -143,11 +159,10 @@ def main():
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
     # Coordinate history #################################################################
-    history_length = 16
-    point_history = deque(maxlen=history_length)
+    point_history = deque(maxlen=HISTORY_LENGTH)
 
     # Finger gesture history ################################################
-    finger_gesture_history = deque(maxlen=history_length)
+    finger_gesture_history = deque(maxlen=HISTORY_LENGTH)
 
     #  ########################################################################
     mode = 0
@@ -167,17 +182,11 @@ def main():
             break
         image = cv.flip(image, 1)  # Mirror display
 
-        # Detection implementation #############################################################
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-
-        image.flags.writeable = False
-        results = hands_detector.process(image)
-        image.flags.writeable = True
-
         #  ####################################################################
         # Process image frame into debug image
-        process_image(image, results, point_history, finger_gesture_history, training_mode=True)
+        debug_image = process_image(image, point_history, finger_gesture_history, training_mode=True, number=number, mode=mode)
         debug_image = draw_info(debug_image, fps, mode, number)
+        debug_image = cv.cvtColor(debug_image, cv.COLOR_RGB2BGR)
 
         # Screen reflection #############################################################
         cv.imshow('Hand Gesture Recognition', debug_image)

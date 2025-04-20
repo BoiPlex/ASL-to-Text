@@ -1,32 +1,32 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import uvicorn
+from fastapi.responses import StreamingResponse
+from collections import deque
+import numpy as np
+import cv2
+import io
 
-from app import classify_image_from_bytes  # Your core logic is in app.py
+from app import process_image, HISTORY_LENGTH
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Set specific origins for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Shared state
+point_history = deque(maxlen=HISTORY_LENGTH)
+finger_gesture_history = deque(maxlen=HISTORY_LENGTH)
 
 @app.get("/")
 async def root():
     return {"message": "Hand Gesture Classification API"}
 
-@app.post("/capture_frame")
-async def classify(file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-        result = classify_image_from_bytes(contents)
-        return {"gestures": result}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+@app.post("/classify/")
+async def classify_image(file: UploadFile = File(...)):
+    # Read image file into OpenCV format
+    contents = await file.read()
+    nparr = np.frombuffer(contents, np.uint8)
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Process image to get debug output
+    debug_image = process_image(image, point_history, finger_gesture_history)
+
+    # Encode the debug image to JPEG for streaming response
+    _, buffer = cv2.imencode(".jpg", cv2.cvtColor(debug_image, cv2.COLOR_RGB2BGR))
+    return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
