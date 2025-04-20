@@ -24,13 +24,15 @@
     },
     "plugins": [
       "expo-router",
+      "expo-camera",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ]
     ],
@@ -39,3 +41,4 @@
     }
   }
 }
+
