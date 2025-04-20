@@ -15,6 +15,9 @@ from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
+OFFSET = 0 # Current label offset to collect more than just 10 labels
+# Increment offset by 10
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -179,8 +182,6 @@ def main():
 
 
 def select_mode(key, mode):
-    OFFSET = 0 # Current label offset to collect more than just 10 labels
-    # Increment offset by 10
     number = -1
     if 48 <= key <= 57:  # 0 ~ 9: select label
         number = key - 48 + OFFSET 
