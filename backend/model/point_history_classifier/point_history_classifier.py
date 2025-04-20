@@ -22,10 +22,7 @@ class PointHistoryClassifier(object):
         self.score_th = score_th
         self.invalid_value = invalid_value
 
-    def __call__(
-        self,
-        point_history,
-    ):
+    def __call__(self, point_history):
         input_details_tensor_index = self.input_details[0]['index']
         self.interpreter.set_tensor(
             input_details_tensor_index,
