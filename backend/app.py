@@ -74,14 +74,16 @@ def process_image(image, point_history, finger_gesture_history, training_mode=Fa
                 logging_csv(number, mode, pre_processed_landmark_list,
                             pre_processed_point_history_list)
 
-            # Hand sign classification
+            # Hand sign classification (static)
             hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+            hand_sign_label = keypoint_classifier_labels[hand_sign_id]
+
             if hand_sign_id == 2:  # Point gesture
                 point_history.append(landmark_list[8])
             else:
                 point_history.append([0, 0])
 
-            # Finger gesture classification
+            # Finger gesture classification (moving)
             finger_gesture_id = 0
             point_history_len = len(pre_processed_point_history_list)
             if point_history_len == (HISTORY_LENGTH * 2):
@@ -90,8 +92,8 @@ def process_image(image, point_history, finger_gesture_history, training_mode=Fa
 
             # Calculates the gesture IDs in the latest detection
             finger_gesture_history.append(finger_gesture_id)
-            most_common_fg_id = Counter(
-                finger_gesture_history).most_common()
+            most_common_fg_id = Counter(finger_gesture_history).most_common()
+            finger_gesture_label = point_history_classifier_labels[most_common_fg_id[0][0]]
 
             # Drawing part for debug mode
             if debug_mode:
@@ -101,14 +103,14 @@ def process_image(image, point_history, finger_gesture_history, training_mode=Fa
                     debug_image,
                     brect,
                     handedness,
-                    keypoint_classifier_labels[hand_sign_id],
-                    point_history_classifier_labels[most_common_fg_id[0][0]],
+                    hand_sign_label,
+                    finger_gesture_label,
                 )
     else:
         point_history.append([0, 0])
     
     debug_image = draw_point_history(debug_image, point_history)
-    return debug_image
+    return debug_image, hand_sign_label, finger_gesture_label
 
 
 def get_args():
