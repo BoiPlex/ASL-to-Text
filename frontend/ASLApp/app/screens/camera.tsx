@@ -3,7 +3,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { useEffect, useRef, useState } from 'react';
-
+import Camera from './../../assets/icons/camera.png';
 import { StatusBar } from 'expo-status-bar';
 
 // import { decode } from 'base64-arraybuffer';
@@ -134,7 +134,8 @@ export default function CameraScreen() {
           {/* Toggle Front/Back Camera */}
           <TouchableOpacity style={styles.toggleButton} onPress={toggleCameraType}>
             <Text style={styles.toggleButtonText}>
-                {facing === 'back' ? 'Front' : 'Back'}
+                {/* {facing === 'back' ? 'Front' : 'Back'} */}
+                <Image source={Camera} ></Image>
             </Text>
           </TouchableOpacity>
 
@@ -233,14 +234,14 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     position: 'absolute',
-    bottom: 65,
-    right: 40,
+    bottom: 60,
+    right: 50,
     backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 20,
     padding: 10,
-  },
-  toggleButtonText: {
-    color: 'white',
-    fontSize: 16,
   }, 
+  // toggleButtonText: {
+  //   color: 'white',
+  //   fontSize: 12,
+  // }, 
 });

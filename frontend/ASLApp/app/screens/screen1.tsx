@@ -8,7 +8,7 @@ export default function Screen1() {
   return (
     <View style={styles.container}> 
 
-      <Image source={Wave} style={{ width: "100%", height: 400 }} />
+      <Image source={Wave} style={{ width: "100%", position: 'absolute', bottom: 0 }} />
 
       <View style={styles.card}> 
         <Text style={styles.title}>Welcome</Text>

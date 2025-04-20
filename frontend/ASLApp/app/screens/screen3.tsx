@@ -1,11 +1,13 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
+import { useRouter } from 'expo-router'; 
+import Translate from './../../assets/icons/translate.png';
 
 export default function Screen1() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}> 
+      <Image source={Translate} style={{ width: "100%", position: 'absolute', bottom: 0 }} />
       <View style={styles.card}>
         <Text style={styles.title}>Read</Text>
         <Text style={styles.subtitle}>
