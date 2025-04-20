@@ -13,6 +13,13 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions(); 
   const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [classifications, setClassifications] = useState({
+    handSignLabel: '',
+    fingerGestureLabel: '',
+    handedness: '',
+  });
+  
   useEffect(() => {
     if (!mediaPermission) {
         requestMediaPermission();
@@ -23,21 +30,21 @@ export default function CameraScreen() {
 
   useEffect(() => {
     // You can remove the automatic capture interval if you only want to capture on button press
-    let intervalId: NodeJS.Timeout | null = null;
+    // let intervalId: NodeJS.Timeout | null = null;
 
-    if (permission?.granted) {
-      intervalId = setInterval(async () => {
-        if (cameraRef.current && !isCapturing) {
-          takePicture();
-        }
-      }, 500);
-    }
+    // if (permission?.granted) {
+    //   intervalId = setInterval(async () => {
+    //     if (cameraRef.current && !isCapturing) {
+    //       takePicture();
+    //     }
+    //   }, 100);
+    // }
 
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
+    // return () => {
+    //   if (intervalId) {
+    //     clearInterval(intervalId);
+    //   }
+    // };
   }, [permission?.granted, isCapturing]);
 
   const takePicture = async () => {
@@ -78,9 +85,16 @@ export default function CameraScreen() {
           const outputBase64 = data.image;
           // console.log("base64: " + outputBase64);
           setCapturedImage(outputBase64);
+          setClassifications({
+            handSignLabel: data.hand_sign_label || 'None',
+            fingerGestureLabel: data.finger_gesture_label || 'None',
+            handedness: data.handedness || 'None',
+          });
+          console.log("IMAGE SET");
           
         } else {
           Alert.alert('Error', 'No image returned from API');
+          setCapturedImage(null);
           console.log("ERROR");
         }
 
@@ -102,6 +116,14 @@ export default function CameraScreen() {
   const toggleCameraType = () => {
     setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
   };
+
+  const handleCapture = async () => {
+    if (capturedImage) {
+      setCapturedImage(null); // go back to camera
+    } else {
+      await takePicture(); // take photo
+    }
+  };
   
   if (!permission) {
     return <View />;
@@ -119,128 +141,116 @@ export default function CameraScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      <View style={styles.cameraContainer}>
-        <CameraView style={styles.camera} ref={cameraRef} facing={facing} />
-        <View style={styles.overlay}>
-          {/* Bottom Speech Bubble */}
-          <View style={styles.bottomBubble}>
-            <View style={styles.bubbleRect}>
-              <Text style={styles.bubbleText}>Capturing and processing...</Text>
-            </View>
+    <View style={{ flex: 1 }}>
+      {!capturedImage ? (
+        <CameraView
+          ref={cameraRef}
+          style={{ flex: 1 }}
+          facing={facing}
+        >
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              onPress={handleCapture}
+              style={styles.captureButton}
+            >
+              <Text>📸</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={toggleCameraType}
+              style={styles.flipButton}
+            >
+              <Text style={styles.flipButtonText}>🔄</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Toggle Front/Back Camera */}
-          <TouchableOpacity style={styles.toggleButton} onPress={toggleCameraType}>
-            <Text style={styles.toggleButtonText}>
-                {facing === 'back' ? 'Front' : 'Back'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Capture Button */}
-          <TouchableOpacity style={styles.captureButton} onPress={() => {}} disabled={isCapturing}>
-            <View style={[styles.captureButtonInner, isCapturing && styles.capturing]} />
+        </CameraView>
+      ) : (
+        <View style={{ flex: 1 }}>
+          <Image
+            source={{ uri: `data:image/png;base64,${capturedImage}` }}
+            style={{ flex: 1, resizeMode: 'contain' }}
+            />
+          <View style={styles.textOverlay}>
+            <Text style={styles.labelText}>Hand Sign: {classifications.handSignLabel}</Text>
+            <Text style={styles.labelText}>Gesture: {classifications.fingerGestureLabel}</Text>
+            <Text style={styles.labelText}>Handedness: {classifications.handedness}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleCapture}
+            style={styles.retakeButton}
+          >
+            <Text>🔁 Retake</Text>
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Continuously display the output image */}
-      {capturedImage ? (
-        <Image
-          source={{ uri: `data:image/png;base64,${capturedImage}` }}
-          style={{ width: 200, height: 200, marginTop: 20 }}
-        />
-      ) : (
-        <Text style={{ color: 'white', marginTop: 20 }}>No image to display</Text>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#fff',
   },
   permissionText: {
     fontSize: 18,
-    textAlign: 'center',
     marginBottom: 20,
-    color: 'white',
   },
   permissionButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
   },
   permissionButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
   },
-  cameraContainer: {
-    flex: 1,
-  },
-  camera: {
-    flex: 1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-  },
-  bottomBubble: {
-    marginBottom: 30,
-    width: '100%',
-  },
-  bubbleRect: {
-    backgroundColor: 'white',
-    paddingVertical: 30,
-    // paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  bubbleText: {
-    fontSize: 16,
-    color: 'black',
-    paddingLeft: 20,
-  },
-  captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'white',
+  buttonRow: {
+    position: 'absolute',
+    bottom: 50,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    width: '100%',
+    gap: 20, // Adds space between buttons
   },
-  captureButtonInner: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#E91E63', // Pink color
+  captureButton: {
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
-  capturing: {
-    backgroundColor: '#FF4081', // A slightly lighter pink when capturing
+  flipButton: {
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
   },
-  toggleButton: {
-    position: 'absolute',
-    bottom: 65,
-    right: 40,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 20,
-    padding: 10,
-  },
-  toggleButtonText: {
-    color: 'white',
+  flipButtonText: {
+    fontWeight: 'bold',
     fontSize: 16,
-  }, 
+  },
+  retakeButton: {
+    position: 'absolute',
+    bottom: 50,
+    alignSelf: 'center',
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+  },
+  textOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  labelText: {
+    color: 'white',
+    fontSize: 18,
+  },
 });

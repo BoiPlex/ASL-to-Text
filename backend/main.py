@@ -43,6 +43,7 @@ async def classify_image(file: UploadFile = File(...)):
     if image is None:
         raise HTTPException(status_code=400, detail="Invalid image")
 
+    image = cv2.flip(image, 1)
     # Process image to get debug output
     debug_image, hand_sign_label, finger_gesture_label, handedness  = process_image(image, point_history, finger_gesture_history)
 
