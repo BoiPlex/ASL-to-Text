@@ -1,11 +1,13 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import Point from './../../assets/icons/point.png';
 
 export default function Screen1() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}> 
+      <Image source={Point} style={{ width: "100%", position: 'absolute', bottom: 0 }} />
       <View style={styles.card}>
         <Text style={styles.title}>Scan</Text>
         <Text style={styles.subtitle}>

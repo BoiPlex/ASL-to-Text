@@ -48,7 +48,7 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}> 
-      <Image source={Logo} style={{ width: 120, height: 120 }} />
+      <Image source={Logo} style={{ width: "100%", height: "90%" }} />
     </View>
   );
 }
