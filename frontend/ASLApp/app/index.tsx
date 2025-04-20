@@ -1,6 +1,8 @@
 import { View, StyleSheet } from "react-native";
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import Logo from './assets/icons/logo.png';
+//import * as Svg from 'react-native-svg';`
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -14,8 +16,8 @@ export default function SplashScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* logo svg here */}
+    <View style={styles.container}> 
+      <Image source={Logo} style={{ width: 120, height: 120 }} />
     </View>
   );
 }
