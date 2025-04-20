@@ -16,7 +16,13 @@ from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
-OFFSET = 20 # Current label offset to collect more than just 10 labels
+DESKTOP_MODE = True
+DESKTOP_DIMENSIONS =  (960, 540)
+MOBILE_DIMENSIONS =  (720, 1080)
+
+HISTORY_LENGTH = 16
+
+OFFSET = 0 # Current label offset to collect more than just 10 labels
 # Increment offset by 10
 
 # Read labels ###########################################################
@@ -42,18 +48,86 @@ hands_detector = mp_hands.Hands(
 keypoint_classifier = KeyPointClassifier()
 point_history_classifier = PointHistoryClassifier()
 
-def read_image(image_bytes):
-    """Convert image bytes to OpenCV BGR image"""
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    image_np = np.array(image)
-    return cv.cvtColor(image_np, cv.COLOR_RGB2BGR)
+def process_image(image, point_history, finger_gesture_history, training_mode=False, debug_mode=True, number=None, mode=None):
+    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+    image.flags.writeable = False
+    results = hands_detector.process(image)
+    image.flags.writeable = True
+
+    hand_sign_label = None
+    finger_gesture_label = None
+    handedness = None
+
+    debug_image = copy.deepcopy(image)
+    if results.multi_hand_landmarks is not None:
+        for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
+                                                results.multi_handedness):
+            # Bounding box calculation
+            brect = calc_bounding_rect(debug_image, hand_landmarks)
+            # Landmark calculation
+            landmark_list = calc_landmark_list(debug_image, hand_landmarks)
+
+            # Conversion to relative coordinates / normalized coordinates
+            pre_processed_landmark_list = pre_process_landmark(
+                landmark_list)
+            pre_processed_point_history_list = pre_process_point_history(
+                debug_image, point_history)
+            
+            if training_mode:
+                # Write to the dataset file
+                logging_csv(number, mode, pre_processed_landmark_list,
+                            pre_processed_point_history_list)
+
+            # Hand sign classification (static)
+            hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+            hand_sign_label = keypoint_classifier_labels[hand_sign_id]
+
+            if hand_sign_id == 2:  # Point gesture
+                point_history.append(landmark_list[8])
+            else:
+                point_history.append([0, 0])
+
+            # Finger gesture classification (moving)
+            finger_gesture_id = 0
+            point_history_len = len(pre_processed_point_history_list)
+            if point_history_len == (HISTORY_LENGTH * 2):
+                finger_gesture_id = point_history_classifier(
+                    pre_processed_point_history_list)
+
+            # Calculates the gesture IDs in the latest detection
+            finger_gesture_history.append(finger_gesture_id)
+            most_common_fg_id = Counter(finger_gesture_history).most_common()
+            finger_gesture_label = point_history_classifier_labels[most_common_fg_id[0][0]]
+
+            # Drawing part for debug mode
+            if debug_mode:
+                debug_image = draw_bounding_rect(True, debug_image, brect)
+                debug_image = draw_landmarks(debug_image, landmark_list)
+                debug_image = draw_info_text(
+                    debug_image,
+                    brect,
+                    handedness,
+                    hand_sign_label,
+                    finger_gesture_label,
+                )
+    else:
+        point_history.append([0, 0])
+    
+    debug_image = draw_point_history(debug_image, point_history)
+    return debug_image, hand_sign_label, finger_gesture_label, handedness.classification[0].label if handedness else None
+
 
 def get_args():
     parser = argparse.ArgumentParser()
 
+    if DESKTOP_MODE:
+        width, height = DESKTOP_DIMENSIONS
+    else:
+        width, height = MOBILE_DIMENSIONS
+
     parser.add_argument("--device", type=int, default=0)
-    parser.add_argument("--width", help='cap width', type=int, default=960)
-    parser.add_argument("--height", help='cap height', type=int, default=540)
+    parser.add_argument("--width", help='cap width', type=int, default=width)
+    parser.add_argument("--height", help='cap height', type=int, default=height)
 
     parser.add_argument('--use_static_image_mode', action='store_true')
     parser.add_argument("--min_detection_confidence",
@@ -93,11 +167,10 @@ def main():
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
     # Coordinate history #################################################################
-    history_length = 16
-    point_history = deque(maxlen=history_length)
+    point_history = deque(maxlen=HISTORY_LENGTH)
 
     # Finger gesture history ################################################
-    finger_gesture_history = deque(maxlen=history_length)
+    finger_gesture_history = deque(maxlen=HISTORY_LENGTH)
 
     #  ########################################################################
     mode = 0
@@ -116,67 +189,12 @@ def main():
         if not ret:
             break
         image = cv.flip(image, 1)  # Mirror display
-        debug_image = copy.deepcopy(image)
-
-        # Detection implementation #############################################################
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-
-        image.flags.writeable = False
-        results = hands_detector.process(image)
-        image.flags.writeable = True
 
         #  ####################################################################
-        if results.multi_hand_landmarks is not None:
-            for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                                  results.multi_handedness):
-                # Bounding box calculation
-                brect = calc_bounding_rect(debug_image, hand_landmarks)
-                # Landmark calculation
-                landmark_list = calc_landmark_list(debug_image, hand_landmarks)
-
-                # Conversion to relative coordinates / normalized coordinates
-                pre_processed_landmark_list = pre_process_landmark(
-                    landmark_list)
-                pre_processed_point_history_list = pre_process_point_history(
-                    debug_image, point_history)
-                # Write to the dataset file
-                logging_csv(number, mode, pre_processed_landmark_list,
-                            pre_processed_point_history_list)
-
-                # Hand sign classification
-                hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-                if hand_sign_id == 2:  # Point gesture
-                    point_history.append(landmark_list[8])
-                else:
-                    point_history.append([0, 0])
-
-                # Finger gesture classification
-                finger_gesture_id = 0
-                point_history_len = len(pre_processed_point_history_list)
-                if point_history_len == (history_length * 2):
-                    finger_gesture_id = point_history_classifier(
-                        pre_processed_point_history_list)
-
-                # Calculates the gesture IDs in the latest detection
-                finger_gesture_history.append(finger_gesture_id)
-                most_common_fg_id = Counter(
-                    finger_gesture_history).most_common()
-
-                # Drawing part
-                debug_image = draw_bounding_rect(use_brect, debug_image, brect)
-                debug_image = draw_landmarks(debug_image, landmark_list)
-                debug_image = draw_info_text(
-                    debug_image,
-                    brect,
-                    handedness,
-                    keypoint_classifier_labels[hand_sign_id],
-                    point_history_classifier_labels[most_common_fg_id[0][0]],
-                )
-        else:
-            point_history.append([0, 0])
-
-        debug_image = draw_point_history(debug_image, point_history)
+        # Process image frame into debug image
+        debug_image, _, _, _ = process_image(image, point_history, finger_gesture_history, training_mode=True, number=number, mode=mode)
         debug_image = draw_info(debug_image, fps, mode, number)
+        debug_image = cv.cvtColor(debug_image, cv.COLOR_RGB2BGR)
 
         # Screen reflection #############################################################
         cv.imshow('Hand Gesture Recognition', debug_image)
