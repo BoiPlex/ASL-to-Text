@@ -551,12 +551,33 @@ def draw_info(image, fps, mode, number):
                1.0, (0, 0, 0), 4, cv.LINE_AA)
     cv.putText(image, "FPS:" + str(fps), (10, 30), cv.FONT_HERSHEY_SIMPLEX,
                1.0, (255, 255, 255), 2, cv.LINE_AA)
+    # font
+    font = cv.FONT_HERSHEY_SIMPLEX
+
+    # org
+    org = (50, 50)
+
+    # fontScale
+    fontScale = 1
+
+    # Blue color in BGR
+    color = (255, 0, 0)
+
+    # Line thickness of 2 px
+    thickness = 2
+
+    # Using cv.putText() method
+    image = cv.putText(image, '', org, font,
+                        fontScale, color, thickness, cv.LINE_AA)
 
     mode_string = ['Logging Key Point', 'Logging Point History']
     if 1 <= mode <= 2:
         cv.putText(image, "MODE:" + mode_string[mode - 1], (10, 90),
                    cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
                    cv.LINE_AA)
+
+
+
         if number >= 0:
             cv.putText(image, "NUM:" + str(number), (10, 110),
                        cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
