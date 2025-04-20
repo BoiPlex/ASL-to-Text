@@ -1,10 +1,11 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { View, Button, StyleSheet, Text } from 'react-native';
 
 export default function CameraScreen() {
 //   const [facing, setFacing] = useState<CameraType>('back');
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission] = useCameraPermissions(); 
+  const cameraRef = useRef(null);
 
   if (!permission) {
     return <View />;
@@ -19,9 +20,21 @@ export default function CameraScreen() {
     );
   }
 
+  const handleFrame = (frame) => {
+    // 🔍 Each frame here contains raw data
+    console.log("Captured frame", frame);
+    // You can send it to a model, extract pixel data, etc.
+  }; 
+  
+
   return (
     <View style={styles.container}>
-        <CameraView style={styles.camera} />
+        <CameraView 
+        style={styles.camera}  
+        ref={cameraRef} 
+        onFrame={handleFrame} 
+        isActive={true}
+        />
     </View>
   )
 }
