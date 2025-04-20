@@ -16,7 +16,7 @@ from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
-OFFSET = 0 # Current label offset to collect more than just 10 labels
+OFFSET = 20 # Current label offset to collect more than just 10 labels
 # Increment offset by 10
 
 # Read labels ###########################################################
