@@ -3,6 +3,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { Alert, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { useEffect, useRef, useState } from 'react';
+
 import Camera from './../../assets/icons/camera.png';
 import { StatusBar } from 'expo-status-bar';
 
@@ -13,7 +14,14 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions(); 
   const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+	const [isCameraReady, setIsCameraReady] = useState(false);
+	const [classifications, setClassifications] = useState({
+		handSignLabel: "",
+		fingerGestureLabel: "",
+		handedness: "",
+	});
 
+  
   useEffect(() => {
     if (!mediaPermission) {
         requestMediaPermission();
@@ -60,9 +68,17 @@ export default function CameraScreen() {
           const outputBase64 = data.image;
           // console.log("base64: " + outputBase64);
           setCapturedImage(outputBase64);
+					setClassifications({
+						handSignLabel: data.hand_sign_label || "None",
+						fingerGestureLabel: data.finger_gesture_label || "None",
+						handedness: data.handedness || "None",
+					});
+					console.log("IMAGE SET");
+
           
         } else {
           Alert.alert('Error', 'No image returned from API');
+          setCapturedImage(null);
           console.log("ERROR");
         }
 
@@ -83,6 +99,14 @@ export default function CameraScreen() {
 
   const toggleCameraType = () => {
     setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
+  };
+
+  const handleCapture = async () => {
+    if (capturedImage) {
+      setCapturedImage(null); // go back to camera
+    } else {
+      await takePicture(); // take photo
+    }
   };
   
   if (!permission) {
@@ -105,11 +129,28 @@ export default function CameraScreen() {
       <StatusBar style="light" />
       <View style={styles.cameraContainer}>
         <CameraView style={styles.camera} ref={cameraRef} facing={facing} />
+        
+        {capturedImage && (
+          <Image
+            source={{ uri: `data:image/png;base64,${capturedImage}` }}
+            style={styles.outputImage}
+            resizeMode="contain"
+          />
+        )}
+
         <View style={styles.overlay}>
           {/* Bottom Speech Bubble */}
           <View style={styles.bottomBubble}>
             <View style={styles.bubbleRect}>
-              <Text style={styles.bubbleText}>Capturing and processing...</Text>
+              <Text style={styles.bubbleText}>
+							  Hand Sign: {classifications.handSignLabel}
+              </Text>
+              <Text style={styles.bubbleText}>
+                Gesture: {classifications.fingerGestureLabel}
+              </Text>
+              <Text style={styles.bubbleText}>
+                Handedness: {classifications.handedness}
+              </Text>
             </View>
           </View>
 
@@ -122,21 +163,11 @@ export default function CameraScreen() {
           </TouchableOpacity>
 
           {/* Capture Button */}
-          <TouchableOpacity style={styles.captureButton} onPress={() => {}} disabled={isCapturing}>
+          <TouchableOpacity style={styles.captureButton} onPress={handleCapture} disabled={isCapturing}>
             <View style={[styles.captureButtonInner, isCapturing && styles.capturing]} />
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Continuously display the output image */}
-      {capturedImage ? (
-        <Image
-          source={{ uri: `data:image/png;base64,${capturedImage}` }}
-          style={{ width: 200, height: 200, marginTop: 20 }}
-        />
-      ) : (
-        <Text style={{ color: 'white', marginTop: 20 }}>No image to display</Text>
-      )}
     </View>
   );
 }
@@ -174,12 +205,14 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+    zIndex: -1,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
+    zIndex: 10,
   },
   bottomBubble: {
     marginBottom: 30,
@@ -221,7 +254,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 20,
     padding: 10,
+    zIndex: 1,
   }, 
+  outputImage: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.6)', // Optional dim overlay
+    zIndex: 0,
+  },
   // toggleButtonText: {
   //   color: 'white',
   //   fontSize: 12,

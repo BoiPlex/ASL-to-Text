@@ -42,7 +42,7 @@ mp_hands = mp.solutions.hands
 hands_detector = mp_hands.Hands(
     static_image_mode=True,
     max_num_hands=10,
-    min_detection_confidence=0.5,
+    min_detection_confidence=0.7,
     min_tracking_confidence=0.5,
 )
 keypoint_classifier = KeyPointClassifier()
