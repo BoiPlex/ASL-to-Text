@@ -9,6 +9,7 @@ from collections import deque
 
 import cv2 as cv
 import numpy as np
+from PIL import Image
 import mediapipe as mp
 
 from utils import CvFpsCalc
@@ -18,6 +19,34 @@ from model import PointHistoryClassifier
 OFFSET = 0 # Current label offset to collect more than just 10 labels
 # Increment offset by 10
 
+# Read labels ###########################################################
+with open('model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
+    keypoint_classifier_labels = csv.reader(f)
+    keypoint_classifier_labels = [
+        row[0] for row in keypoint_classifier_labels
+    ]
+with open('model/point_history_classifier/point_history_classifier_label.csv', encoding='utf-8-sig') as f:
+    point_history_classifier_labels = csv.reader(f)
+    point_history_classifier_labels = [
+        row[0] for row in point_history_classifier_labels
+    ]
+
+# Load model #############################################################
+mp_hands = mp.solutions.hands
+hands_detector = mp_hands.Hands(
+    static_image_mode=True,
+    max_num_hands=1,
+    min_detection_confidence=0.7,
+    min_tracking_confidence=0.5,
+)
+keypoint_classifier = KeyPointClassifier()
+point_history_classifier = PointHistoryClassifier()
+
+def read_image(image_bytes):
+    """Convert image bytes to OpenCV BGR image"""
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    image_np = np.array(image)
+    return cv.cvtColor(image_np, cv.COLOR_RGB2BGR)
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -60,31 +89,6 @@ def main():
     cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 
-    # Model load #############################################################
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(
-        static_image_mode=use_static_image_mode,
-        max_num_hands=1,
-        min_detection_confidence=min_detection_confidence,
-        min_tracking_confidence=min_tracking_confidence,
-    )
-
-    keypoint_classifier = KeyPointClassifier()
-
-    point_history_classifier = PointHistoryClassifier()
-
-    # Read labels ###########################################################
-    with open('model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
-        keypoint_classifier_labels = csv.reader(f)
-        keypoint_classifier_labels = [
-            row[0] for row in keypoint_classifier_labels
-        ]
-    with open('model/point_history_classifier/point_history_classifier_label.csv', encoding='utf-8-sig') as f:
-        point_history_classifier_labels = csv.reader(f)
-        point_history_classifier_labels = [
-            row[0] for row in point_history_classifier_labels
-        ]
-
     # FPS Measurement ########################################################
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
@@ -118,7 +122,7 @@ def main():
         image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
         image.flags.writeable = False
-        results = hands.process(image)
+        results = hands_detector.process(image)
         image.flags.writeable = True
 
         #  ####################################################################
