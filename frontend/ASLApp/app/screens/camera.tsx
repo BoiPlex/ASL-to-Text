@@ -28,17 +28,9 @@ export default function CameraScreen() {
     if (permission?.granted) {
       intervalId = setInterval(async () => {
         if (cameraRef.current && !isCapturing) {
-          setIsCapturing(true);
-          try {
-            const photo = await cameraRef.current.takePictureAsync({ skipProcessing: true });
-            console.log('Captured photo at', new Date().toISOString());
-          } catch (e) {
-            console.error("Capture error:", e);
-          } finally {
-            setIsCapturing(false);
-          }
+          takePicture();
         }
-      }, 1000);
+      }, 500);
     }
 
     return () => {
@@ -106,7 +98,6 @@ export default function CameraScreen() {
       }
     }
   };
-  
 
   const toggleCameraType = () => {
     setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
@@ -133,11 +124,10 @@ export default function CameraScreen() {
       <View style={styles.cameraContainer}>
         <CameraView style={styles.camera} ref={cameraRef} facing={facing} />
         <View style={styles.overlay}>
-          
-          {/* Bottom Speech Bubble (You can customize this) */}
+          {/* Bottom Speech Bubble */}
           <View style={styles.bottomBubble}>
             <View style={styles.bubbleRect}>
-              <Text style={styles.bubbleText}>Tap the button to capture</Text>
+              <Text style={styles.bubbleText}>Capturing and processing...</Text>
             </View>
           </View>
 
@@ -145,18 +135,17 @@ export default function CameraScreen() {
           <TouchableOpacity style={styles.toggleButton} onPress={toggleCameraType}>
             <Text style={styles.toggleButtonText}>
                 {facing === 'back' ? 'Front' : 'Back'}
-                {/* replace text with cam switch icon */}
             </Text>
           </TouchableOpacity>
 
           {/* Capture Button */}
-          <TouchableOpacity style={styles.captureButton} onPress={takePicture} disabled={isCapturing}>
+          <TouchableOpacity style={styles.captureButton} onPress={() => {}} disabled={isCapturing}>
             <View style={[styles.captureButtonInner, isCapturing && styles.capturing]} />
           </TouchableOpacity>
         </View>
       </View>
-      
-      {/* Display the image if available */}
+
+      {/* Continuously display the output image */}
       {capturedImage ? (
         <Image
           source={{ uri: `data:image/png;base64,${capturedImage}` }}
