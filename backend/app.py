@@ -81,10 +81,11 @@ def process_image(image, point_history, finger_gesture_history, training_mode=Fa
             hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
             hand_sign_label = keypoint_classifier_labels[hand_sign_id]
 
-            if hand_sign_id == 2:  # Point gesture
-                point_history.append(landmark_list[8])
-            else:
-                point_history.append([0, 0])
+            # always track the lil finger
+            point_history.append(landmark_list[20])
+
+            #always trace index finger
+            point_history.append(landmark_list[8])
 
             # Finger gesture classification (moving)
             finger_gesture_id = 0
