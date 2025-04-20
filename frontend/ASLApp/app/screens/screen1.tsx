@@ -1,12 +1,16 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import Wave from './../../assets/icons/wave.png';
 
 export default function Screen1() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
+    <View style={styles.container}> 
+
+      <Image source={Wave} style={{ width: "100%", position: 'absolute', bottom: 0 }} />
+
+      <View style={styles.card}> 
         <Text style={styles.title}>Welcome</Text>
         <Text style={styles.subtitle}>
           to <Text style={styles.bold}>PalmReader</Text>, the real-time American Sign Language (ASL) camera translator!
@@ -17,7 +21,7 @@ export default function Screen1() {
           <View style={styles.dot} />
           <View style={styles.dot} /> 
           <View style={styles.dot} />
-        </View>
+        </View> 
 
         <Pressable style={styles.button} onPress={() => router.push('/screens/screen2')}>
           <Text style={styles.buttonText}>Continue</Text>
@@ -30,8 +34,8 @@ export default function Screen1() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: '#ddd',
+    justifyContent: 'flex-end', 
+    backgroundColor: '#F6B92E',
   },
   card: {
     backgroundColor: 'white',

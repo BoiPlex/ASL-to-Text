@@ -1,15 +1,17 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
+import { useRouter } from 'expo-router'; 
+import Speech from './../../assets/icons/speech.png';
 
 export default function Screen1() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}> 
+      <Image source={Speech} style={{ width: "100%", position: 'absolute', bottom: 0 }} />
       <View style={styles.card}>
         <Text style={styles.title}>Communicate</Text>
         <Text style={styles.subtitle}>
-          It's that easy! Now you may freely translate ASL.
+          It's that easy!
         </Text>
 
         <View style={styles.dotsContainer}>
@@ -31,7 +33,7 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       justifyContent: 'flex-end',
-      backgroundColor: '#ddd',
+      backgroundColor: '#F6B92E',
     },
     card: {
       backgroundColor: 'white',
