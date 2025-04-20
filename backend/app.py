@@ -54,6 +54,9 @@ def process_image(image, point_history, finger_gesture_history, training_mode=Fa
     results = hands_detector.process(image)
     image.flags.writeable = True
 
+    hand_sign_label = None
+    finger_gesture_label = None
+
     debug_image = copy.deepcopy(image)
     if results.multi_hand_landmarks is not None:
         for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
@@ -188,7 +191,7 @@ def main():
 
         #  ####################################################################
         # Process image frame into debug image
-        debug_image = process_image(image, point_history, finger_gesture_history, training_mode=True, number=number, mode=mode)
+        debug_image, _, _ = process_image(image, point_history, finger_gesture_history, training_mode=True, number=number, mode=mode)
         debug_image = draw_info(debug_image, fps, mode, number)
         debug_image = cv.cvtColor(debug_image, cv.COLOR_RGB2BGR)
 

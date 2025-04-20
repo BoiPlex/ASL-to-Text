@@ -25,7 +25,7 @@ async def classify_image(file: UploadFile = File(...)):
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     # Process image to get debug output
-    debug_image = process_image(image, point_history, finger_gesture_history)
+    debug_image, hand_sign_label, finger_gesture_label  = process_image(image, point_history, finger_gesture_history)
 
     # Encode the debug image to JPEG for streaming response
     _, buffer = cv2.imencode(".jpg", cv2.cvtColor(debug_image, cv2.COLOR_RGB2BGR))
