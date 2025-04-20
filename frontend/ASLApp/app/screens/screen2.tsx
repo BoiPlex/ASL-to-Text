@@ -28,56 +28,61 @@ export default function Screen1() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: '#ddd',
-  },
-  card: {
-    backgroundColor: 'white',
-    padding: 24,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'left'
-  },
-  subtitle: {
-    textAlign: 'left',
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  dotsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 24,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#888',
-  },
-  activeDot: {
-    backgroundColor: '#d87aa6',
-  },
-  button: {
-    backgroundColor: '#17376A',
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    width: '100%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-});
+    container: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: '#ddd',
+    },
+    card: {
+      backgroundColor: 'white',
+      paddingTop: 40,
+      paddingBottom: 50,
+      paddingHorizontal: 15,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+    },
+    title: {
+      fontSize: 35,
+      fontWeight: 'bold',
+      marginBottom: 12, 
+      textAlign: 'left',
+      paddingHorizontal: 15,
+    },
+    subtitle: {
+      textAlign: 'left',
+      fontSize: 18,
+      marginBottom: 32,
+      paddingHorizontal: 15,
+    },
+    bold: {
+      fontWeight: 'bold',
+    },
+    dotsContainer: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 22,
+      justifyContent: 'center',
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#888',
+    },
+    activeDot: {
+      backgroundColor: '#d87aa6',
+    },
+    button: {
+      backgroundColor: '#17376A',
+      borderRadius: 999,
+      paddingVertical: 18,
+      paddingHorizontal: 32,
+      width: '100%',
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: 'white',
+      fontWeight: '600',
+    },
+  });
+  
