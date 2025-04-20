@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       justifyContent: 'flex-end',
-      backgroundColor: '#ddd',
+      backgroundColor: '#E35E93',
     },
     card: {
       backgroundColor: 'white',
