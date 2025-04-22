@@ -22,7 +22,7 @@ MOBILE_DIMENSIONS =  (720, 1080)
 
 HISTORY_LENGTH = 16
 
-OFFSET = 0 # Current label offset to collect more than just 10 labels
+OFFSET = 26 # Current label offset to collect more than just 10 labels
 # Increment offset by 10
 
 # Read labels ###########################################################
@@ -41,7 +41,7 @@ with open('model/point_history_classifier/point_history_classifier_label.csv', e
 mp_hands = mp.solutions.hands
 hands_detector = mp_hands.Hands(
     static_image_mode=True,
-    max_num_hands=10,
+    max_num_hands=4,
     min_detection_confidence=0.7,
     min_tracking_confidence=0.5,
 )
